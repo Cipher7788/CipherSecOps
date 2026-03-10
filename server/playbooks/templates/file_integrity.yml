@@ -1,0 +1,32 @@
+name: File Integrity Violation Response
+trigger: file_integrity
+description: >
+  Automated response playbook for file integrity violations.
+  Collects forensics, alerts the SOC, and creates an incident for investigation.
+
+steps:
+  - name: alert_soc_file_integrity
+    action: alert_soc
+    params:
+      message: "ALERT: File integrity violation detected on agent {{ agent_id }} — file {{ file_path }}"
+      severity: "{{ severity }}"
+
+  - name: collect_forensic_snapshot
+    action: collect_forensics
+    params:
+      agent_id: "{{ agent_id }}"
+
+  - name: create_file_integrity_incident
+    action: create_incident_ticket
+    params:
+      title: "File Integrity Violation - {{ agent_id }}"
+      description: >
+        A protected file was modified on agent {{ agent_id }}.
+        File path: {{ file_path }}. Rule ID: {{ rule_id }}. Risk score: {{ risk_score }}.
+      severity: "{{ severity }}"
+
+  - name: isolate_if_critical
+    condition: "risk_score >= 85"
+    action: isolate_endpoint
+    params:
+      agent_id: "{{ agent_id }}"

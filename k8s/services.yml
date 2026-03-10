@@ -1,0 +1,62 @@
+---
+# Server – internal ClusterIP (reached by other pods / ingress controller)
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  namespace: ciphersecops
+  labels:
+    app: server
+    app.kubernetes.io/name: server
+    app.kubernetes.io/part-of: ciphersecops
+spec:
+  type: ClusterIP
+  selector:
+    app: server
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+
+---
+# Dashboard – exposed externally via a cloud load balancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: ciphersecops
+  labels:
+    app: dashboard
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/part-of: ciphersecops
+spec:
+  type: LoadBalancer
+  selector:
+    app: dashboard
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+
+---
+# PostgreSQL – internal ClusterIP (only the server should reach this)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: ciphersecops
+  labels:
+    app: postgres
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: ciphersecops
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
