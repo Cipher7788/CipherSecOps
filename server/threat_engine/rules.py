@@ -113,7 +113,10 @@ def _crypto_miner(event: Dict[str, Any]) -> bool:
         return False
     dest = str(_get(event, "data", "destination", default="")).lower()
     query = str(_get(event, "data", "query", default="")).lower()
-    miner_keywords = {"pool.minexmr", "xmrpool", "nanopool", "supportxmr", "moneroocean", ":3333", ":4444", ":14433"}
+    miner_keywords = {
+        "pool.minexmr", "xmrpool", "nanopool", "supportxmr",
+        "moneroocean", ":3333", ":4444", ":14433",
+    }
     combined = dest + query
     return any(kw in combined for kw in miner_keywords)
 

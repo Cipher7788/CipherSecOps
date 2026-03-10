@@ -18,11 +18,15 @@ class ConnectionManager:
     async def connect(self, client_id: str, websocket: WebSocket) -> None:
         await websocket.accept()
         self.active_connections[client_id] = websocket
-        logger.info("WebSocket client connected: %s (total=%d)", client_id, len(self.active_connections))
+        logger.info(
+            "WebSocket client connected: %s (total=%d)", client_id, len(self.active_connections)
+        )
 
     def disconnect(self, client_id: str) -> None:
         self.active_connections.pop(client_id, None)
-        logger.info("WebSocket client disconnected: %s (total=%d)", client_id, len(self.active_connections))
+        logger.info(
+            "WebSocket client disconnected: %s (total=%d)", client_id, len(self.active_connections)
+        )
 
     async def send_to_client(self, client_id: str, message: Any) -> None:
         websocket = self.active_connections.get(client_id)

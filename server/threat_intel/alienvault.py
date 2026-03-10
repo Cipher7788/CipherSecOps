@@ -31,7 +31,9 @@ class AlienVaultProvider(ThreatIntelProvider):
         for pulse in data.get("pulse_info", {}).get("pulses", []):
             tags.extend(pulse.get("tags", []))
         is_malicious = pulse_count > 0
-        confidence = min(1.0, pulse_count / _MAX_PULSE_COUNT_FOR_CONFIDENCE) if is_malicious else 0.0
+        confidence = (
+            min(1.0, pulse_count / _MAX_PULSE_COUNT_FOR_CONFIDENCE) if is_malicious else 0.0
+        )
         return ThreatIntelResult(
             is_malicious=is_malicious,
             confidence=round(confidence, 2),
