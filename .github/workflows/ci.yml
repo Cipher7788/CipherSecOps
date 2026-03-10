@@ -11,6 +11,8 @@ jobs:
   lint-server:
     name: Lint – server & agent
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +46,8 @@ jobs:
   test-server:
     name: Test – server
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     services:
       postgres:
         image: postgres:15-alpine
@@ -102,6 +106,8 @@ jobs:
   test-agent:
     name: Test – agent
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       LOG_LEVEL: DEBUG
       SERVER_URL: http://localhost:8000
@@ -134,6 +140,8 @@ jobs:
   build-dashboard:
     name: Build – dashboard
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
