@@ -129,6 +129,10 @@ class PlaybookEngine:
         for k, v in params.items():
             if isinstance(v, str) and v.startswith("{{") and v.endswith("}}"):
                 ctx_key = v[2:-2].strip()
+                if ctx_key not in context:
+                    logger.warning(
+                        "Playbook param '%s' references missing context key '%s'", k, ctx_key
+                    )
                 resolved[k] = context.get(ctx_key, v)
             else:
                 resolved[k] = v

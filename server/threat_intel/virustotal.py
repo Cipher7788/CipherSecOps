@@ -27,7 +27,8 @@ class VirusTotalProvider(ThreatIntelProvider):
         stats: dict = attrs.get("last_analysis_stats", {})
         malicious: int = stats.get("malicious", 0)
         suspicious: int = stats.get("suspicious", 0)
-        total: int = sum(stats.values()) or 1
+        total_engines: int = sum(stats.values())
+        total: int = total_engines if total_engines > 0 else 1
         hit_count = malicious + suspicious
         is_malicious = malicious >= _MALICIOUS_THRESHOLD
         confidence = round(hit_count / total, 2)

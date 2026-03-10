@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from server.threat_engine.rules import Rule
 
@@ -27,7 +27,7 @@ _RISK_LEVELS = [
 class RiskScorer:
     """Computes a normalised risk score (0–100) for a threat detection."""
 
-    def __init__(self, agent_reputation: Dict[str, float] | None = None) -> None:
+    def __init__(self, agent_reputation: Optional[Dict[str, float]] = None) -> None:
         # agent_reputation maps agent_id → reputation multiplier (0.5–1.5).
         # A lower reputation means a higher-risk agent.
         self._agent_reputation: Dict[str, float] = agent_reputation or {}

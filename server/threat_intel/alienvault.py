@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 _OTX_BASE = "https://otx.alienvault.com/api/v1/indicators"
 _TIMEOUT = 10.0
+# Pulse count above which confidence is treated as 1.0 (maximum)
+_MAX_PULSE_COUNT_FOR_CONFIDENCE = 10.0
 
 
 class AlienVaultProvider(ThreatIntelProvider):
@@ -29,7 +31,7 @@ class AlienVaultProvider(ThreatIntelProvider):
         for pulse in data.get("pulse_info", {}).get("pulses", []):
             tags.extend(pulse.get("tags", []))
         is_malicious = pulse_count > 0
-        confidence = min(1.0, pulse_count / 10.0) if is_malicious else 0.0
+        confidence = min(1.0, pulse_count / _MAX_PULSE_COUNT_FOR_CONFIDENCE) if is_malicious else 0.0
         return ThreatIntelResult(
             is_malicious=is_malicious,
             confidence=round(confidence, 2),
