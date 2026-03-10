@@ -9,7 +9,7 @@ import logging
 import os
 import platform
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class IntegrityEvent:
     event_kind: str           # "modified" | "new_file" | "missing" | "unchanged"
     previous_hash: Optional[str]
     current_hash: Optional[str]
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     is_suspicious: bool = False
     suspicion_reason: str = ""
 

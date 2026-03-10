@@ -84,13 +84,28 @@ def _resolve_process_name(pid: Optional[int]) -> Optional[str]:
         return None
 
 
+def _is_private_ip(ip: str) -> bool:
+    """Return True if the IP is RFC-1918 / loopback and therefore not a public C2 target."""
+    if ip.startswith(("127.", "::1", "10.", "192.168.")):
+        return True
+    # RFC 1918: 172.16.0.0 – 172.31.255.255
+    if ip.startswith("172."):
+        try:
+            second_octet = int(ip.split(".")[1])
+            if 16 <= second_octet <= 31:
+                return True
+        except (IndexError, ValueError):
+            pass
+    return False
+
+
 def _check_reverse_shell(event: NetworkEvent) -> tuple[bool, str]:
     """Outbound ESTABLISHED connection to a known reverse-shell port."""
     if (
         event.status == "ESTABLISHED"
         and event.remote_port in SUSPICIOUS_PORTS
         and event.remote_ip
-        and not event.remote_ip.startswith(("127.", "::1", "10.", "192.168.", "172."))
+        and not _is_private_ip(event.remote_ip)
     ):
         return True, f"Outbound connection to suspicious port {event.remote_port}"
     return False, ""

@@ -135,7 +135,7 @@ class TelemetrySender:
     # ------------------------------------------------------------------
 
     @property
-    def _auth_headers(self) -> Dict[str, str]:
+    def auth_headers(self) -> Dict[str, str]:
         headers: Dict[str, str] = {"Content-Type": "application/json"}
         if self._jwt_token:
             headers["Authorization"] = f"Bearer {self._jwt_token}"
@@ -195,7 +195,7 @@ class TelemetrySender:
                 response = self._session.post(
                     endpoint,
                     data=payload,
-                    headers=self._auth_headers,
+                    headers=self.auth_headers,
                     timeout=15,
                 )
                 if response.status_code in (200, 201, 202, 204):

@@ -174,17 +174,28 @@ class SystemMonitor:
                 except (psutil.NoSuchProcess, psutil.AccessDenied, TypeError):
                     pass
 
-                # Platform-specific supplementary hints (best-effort)
+                # Platform-specific supplementary hints enrich the ProcessInfo
+                # with additional context (command line from WMI, /proc status).
+                # The hints are best-effort; failures are silently ignored.
+                extra_cmdline: Optional[str] = None
                 if self._platform == "windows":
-                    _windows_wmi_hint(info["pid"])
+                    extra_cmdline = _windows_wmi_hint(info["pid"])
                 elif self._platform == "linux":
-                    _linux_proc_hint(info["pid"])
+                    extra_cmdline = _linux_proc_hint(info["pid"])
+
+                base_cmdline: List[str] = info.get("cmdline") or []
+                # Supplement psutil cmdline with platform hint if it provides
+                # additional tokens (WMI on Windows, /proc/pid/cmdline on Linux).
+                if extra_cmdline:
+                    hint_tokens = extra_cmdline.split()
+                    if len(hint_tokens) > len(base_cmdline):
+                        base_cmdline = hint_tokens
 
                 pi = ProcessInfo(
                     pid=info["pid"],
                     name=info["name"] or "",
                     exe=info.get("exe"),
-                    cmdline=info.get("cmdline") or [],
+                    cmdline=base_cmdline,
                     cpu_percent=info.get("cpu_percent") or 0.0,
                     memory_percent=info.get("memory_percent") or 0.0,
                     status=info.get("status") or "",
