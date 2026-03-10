@@ -80,5 +80,7 @@ async def execute_playbook(
 
     engine = PlaybookEngine()
     execution_result = await engine.execute_steps(playbook.steps, payload.context)
-    logger.info("Playbook %d (%s) executed: %s", playbook_id, playbook.name, execution_result.get("status"))
+    logger.info(
+        "Playbook %d (%s) executed: %s", playbook_id, playbook.name, execution_result.get("status")
+    )
     return {"playbook_id": playbook_id, "playbook_name": playbook.name, **execution_result}

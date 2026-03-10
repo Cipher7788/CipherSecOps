@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 try:
     import win32evtlog  # type: ignore
     import win32evtlogutil  # type: ignore
-    import win32security  # type: ignore
     _WIN32_AVAILABLE = True
 except ImportError:
     _WIN32_AVAILABLE = False
@@ -28,6 +27,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class LogEvent:

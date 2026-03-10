@@ -121,7 +121,11 @@ async def top_threats(
 ) -> List[Dict[str, Any]]:
     """Return the most frequently occurring threat types."""
     result = await db.execute(
-        select(Threat.title, func.count(Threat.id).label("count"), func.avg(Threat.risk_score).label("avg_risk"))
+        select(
+            Threat.title,
+            func.count(Threat.id).label("count"),
+            func.avg(Threat.risk_score).label("avg_risk"),
+        )
         .group_by(Threat.title)
         .order_by(func.count(Threat.id).desc())
         .limit(limit)

@@ -50,7 +50,9 @@ def _suspicious_process_spawn(event: Dict[str, Any]) -> bool:
     parent = str(_get(event, "data", "parent_process", default="")).lower()
     child = str(_get(event, "data", "process_name", default="")).lower()
     suspicious_parents = {"word.exe", "excel.exe", "outlook.exe", "powerpnt.exe", "winword.exe"}
-    suspicious_children = {"cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe"}
+    suspicious_children = {
+        "cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe",
+    }
     return parent in suspicious_parents and child in suspicious_children
 
 
@@ -113,7 +115,10 @@ def _crypto_miner(event: Dict[str, Any]) -> bool:
         return False
     dest = str(_get(event, "data", "destination", default="")).lower()
     query = str(_get(event, "data", "query", default="")).lower()
-    miner_keywords = {"pool.minexmr", "xmrpool", "nanopool", "supportxmr", "moneroocean", ":3333", ":4444", ":14433"}
+    miner_keywords = {
+        "pool.minexmr", "xmrpool", "nanopool", "supportxmr",
+        "moneroocean", ":3333", ":4444", ":14433",
+    }
     combined = dest + query
     return any(kw in combined for kw in miner_keywords)
 

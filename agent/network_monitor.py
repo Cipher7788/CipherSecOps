@@ -4,7 +4,6 @@ of compromise such as reverse shells, beaconing, and DNS tunnelling.
 """
 
 import logging
-import socket
 from dataclasses import dataclass, field
 from typing import List, Optional, Set
 
@@ -167,7 +166,9 @@ class NetworkMonitor:
         suspicious_ports: Optional[Set[int]] = None,
         known_bad_ips: Optional[Set[str]] = None,
     ) -> None:
-        self.suspicious_ports: Set[int] = suspicious_ports if suspicious_ports is not None else SUSPICIOUS_PORTS
+        self.suspicious_ports: Set[int] = (
+            suspicious_ports if suspicious_ports is not None else SUSPICIOUS_PORTS
+        )
         self.known_bad_ips: Set[str] = known_bad_ips if known_bad_ips is not None else KNOWN_BAD_IPS
 
     def collect(self) -> List[NetworkEvent]:

@@ -1,7 +1,6 @@
 """Playbook execution engine."""
 
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -57,7 +56,9 @@ class PlaybookEngine:
             # Evaluate optional condition
             if condition and not self._evaluate_condition(condition, context):
                 logger.debug("Skipping step '%s': condition not met", step_name)
-                results.append({"step": step_name, "status": "skipped", "reason": "condition_false"})
+                results.append(
+                    {"step": step_name, "status": "skipped", "reason": "condition_false"}
+                )
                 continue
 
             # Resolve parameter placeholders from context
@@ -66,7 +67,10 @@ class PlaybookEngine:
             action_func = _ACTION_MAP.get(action_name)
             if action_func is None:
                 logger.warning("Unknown action '%s' in step '%s'", action_name, step_name)
-                results.append({"step": step_name, "status": "error", "reason": f"unknown_action:{action_name}"})
+                results.append(
+                    {"step": step_name, "status": "error",
+                     "reason": f"unknown_action:{action_name}"}
+                )
                 continue
 
             try:
@@ -77,7 +81,11 @@ class PlaybookEngine:
                 logger.error("Step '%s' failed: %s", step_name, exc, exc_info=True)
                 results.append({"step": step_name, "status": "error", "reason": str(exc)})
 
-        overall_status = "success" if all(r.get("status") in {"success", "skipped"} for r in results) else "partial"
+        overall_status = (
+            "success"
+            if all(r.get("status") in {"success", "skipped"} for r in results)
+            else "partial"
+        )
         return {"status": overall_status, "steps_executed": len(steps), "results": results}
 
     def _evaluate_condition(self, condition: str, context: Dict[str, Any]) -> bool:
