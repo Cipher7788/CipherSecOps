@@ -17,8 +17,11 @@ async def isolate_endpoint(agent_id: str) -> Dict[str, Any]:
 
     await manager.send_to_client(
         agent_id,
-        {"command": "isolate", "agent_id": agent_id,
-         "timestamp": datetime.now(timezone.utc).isoformat()},
+        {
+            "command": "isolate",
+            "agent_id": agent_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
     )
     return {"action": "isolate_endpoint", "agent_id": agent_id, "status": "sent"}
 
@@ -30,8 +33,11 @@ async def kill_process(agent_id: str, pid: int) -> Dict[str, Any]:
 
     await manager.send_to_client(
         agent_id,
-        {"command": "kill_process", "pid": pid,
-         "timestamp": datetime.now(timezone.utc).isoformat()},
+        {
+            "command": "kill_process",
+            "pid": pid,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
     )
     return {"action": "kill_process", "agent_id": agent_id, "pid": pid, "status": "sent"}
 
@@ -95,7 +101,10 @@ async def collect_forensics(agent_id: str) -> Dict[str, Any]:
 
     await manager.send_to_client(
         agent_id,
-        {"command": "collect_forensics", "agent_id": agent_id,
-         "timestamp": datetime.now(timezone.utc).isoformat()},
+        {
+            "command": "collect_forensics",
+            "agent_id": agent_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
     )
     return {"action": "collect_forensics", "agent_id": agent_id, "status": "requested"}
