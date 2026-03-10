@@ -7,6 +7,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.api.agents import router as agents_router
+from server.api.dashboard import router as dashboard_router
+from server.api.incidents import router as incidents_router
+from server.api.playbooks import router as playbooks_router
+from server.api.telemetry import router as telemetry_router
+from server.api.threats import router as threats_router
 from server.config import settings
 from server.database import close_db, init_db
 from server.websocket import manager
@@ -44,7 +50,8 @@ app = FastAPI(
     title=settings.APP_NAME,
     description=(
         "Cross-Platform Autonomous Security Monitoring & Response Platform. "
-        "Mini EDR/XDR with real-time threat detection, automated response, and MITRE ATT&CK mapping."
+        "Mini EDR/XDR with real-time threat detection, automated response, "
+        "and MITRE ATT&CK mapping."
     ),
     version=settings.APP_VERSION,
     docs_url="/docs",
@@ -63,13 +70,6 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Routers
 # ---------------------------------------------------------------------------
-
-from server.api.agents import router as agents_router
-from server.api.dashboard import router as dashboard_router
-from server.api.incidents import router as incidents_router
-from server.api.playbooks import router as playbooks_router
-from server.api.telemetry import router as telemetry_router
-from server.api.threats import router as threats_router
 
 app.include_router(agents_router, prefix="/agents", tags=["Agents"])
 app.include_router(telemetry_router, prefix="/telemetry", tags=["Telemetry"])

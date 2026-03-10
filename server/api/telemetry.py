@@ -61,11 +61,15 @@ async def ingest_event(
     from server.database import AsyncSessionLocal
 
     background_tasks.add_task(_run_threat_analysis, [event.id], AsyncSessionLocal)
-    logger.debug("Ingested event id=%d type=%s agent=%s", event.id, payload.event_type, payload.agent_id)
+    logger.debug(
+        "Ingested event id=%d type=%s agent=%s", event.id, payload.event_type, payload.agent_id
+    )
     return event
 
 
-@router.post("/batch", response_model=List[TelemetryEventResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/batch", response_model=List[TelemetryEventResponse], status_code=status.HTTP_201_CREATED
+)
 async def ingest_batch(
     payload: List[TelemetryEventCreate],
     background_tasks: BackgroundTasks,
@@ -75,7 +79,9 @@ async def ingest_batch(
     if not payload:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty batch")
     if len(payload) > 1000:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Batch size exceeds 1000")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Batch size exceeds 1000"
+        )
 
     events = [
         TelemetryEvent(
