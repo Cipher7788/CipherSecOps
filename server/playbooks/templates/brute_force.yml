@@ -1,0 +1,33 @@
+name: Brute Force Response
+trigger: brute_force
+description: >
+  Automated response playbook for brute-force login attempts.
+  Blocks the offending IP, alerts the SOC, and creates an incident ticket.
+
+steps:
+  - name: alert_soc_on_brute_force
+    action: alert_soc
+    params:
+      message: "WARNING: Brute force attack detected on agent {{ agent_id }}"
+      severity: "{{ severity }}"
+
+  - name: block_attacking_ip
+    condition: "risk_score >= 30"
+    action: block_ip
+    params:
+      ip: "{{ source_ip }}"
+
+  - name: collect_forensic_evidence
+    action: collect_forensics
+    params:
+      agent_id: "{{ agent_id }}"
+
+  - name: create_brute_force_incident
+    condition: "risk_score >= 50"
+    action: create_incident_ticket
+    params:
+      title: "Brute Force Attack - {{ agent_id }}"
+      description: >
+        Brute force login attempts detected on agent {{ agent_id }}.
+        Source IP {{ source_ip }} has been blocked. Risk score: {{ risk_score }}.
+      severity: "{{ severity }}"

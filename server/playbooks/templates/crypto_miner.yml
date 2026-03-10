@@ -1,0 +1,39 @@
+name: Crypto Miner Response
+trigger: crypto_miner
+description: >
+  Automated response playbook for cryptocurrency miner detection.
+  Kills the miner process, blocks the pool IP, and alerts the SOC.
+
+steps:
+  - name: alert_soc_crypto_miner
+    action: alert_soc
+    params:
+      message: "INFO: Crypto miner activity detected on agent {{ agent_id }}"
+      severity: "{{ severity }}"
+
+  - name: kill_miner_process
+    condition: "risk_score >= 30"
+    action: kill_process
+    params:
+      agent_id: "{{ agent_id }}"
+      pid: "{{ miner_pid }}"
+
+  - name: block_mining_pool_ip
+    action: block_ip
+    params:
+      ip: "{{ pool_ip }}"
+
+  - name: collect_forensic_evidence
+    action: collect_forensics
+    params:
+      agent_id: "{{ agent_id }}"
+
+  - name: create_miner_incident
+    condition: "risk_score >= 40"
+    action: create_incident_ticket
+    params:
+      title: "Crypto Miner Detected - {{ agent_id }}"
+      description: >
+        Cryptocurrency mining activity was detected on agent {{ agent_id }}.
+        Pool IP {{ pool_ip }} has been blocked. Risk score: {{ risk_score }}.
+      severity: "{{ severity }}"

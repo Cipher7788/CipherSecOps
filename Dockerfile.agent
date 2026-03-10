@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system-level tools the agent needs for host monitoring
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        procps \
+        net-tools \
+        iproute2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies before copying source for better layer caching
+COPY agent/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application source
+COPY agent/ ./agent/
+
+# The agent runs as root because it needs access to /proc and host network
+# interfaces for process and network monitoring. Deploy with appropriate
+# security controls at the orchestration layer (e.g., K8s PodSecurityPolicy).
+
+CMD ["python", "-m", "agent.main"]
