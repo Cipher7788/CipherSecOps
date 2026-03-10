@@ -72,7 +72,8 @@ class RiskScorer:
         final = int(min(100, max(0, raw)))
         logger.debug(
             "Risk score for agent=%s: base=%d multi=%d recency=%d rep=%.2f → %d",
-            agent_id, max_severity_weight, multi_rule_bonus, recency_bonus, reputation_multiplier, final,
+            agent_id, max_severity_weight, multi_rule_bonus,
+            recency_bonus, reputation_multiplier, final,
         )
         return final
 

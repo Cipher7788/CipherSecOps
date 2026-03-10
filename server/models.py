@@ -1,6 +1,5 @@
 """SQLAlchemy ORM models and Pydantic schemas."""
 
-import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -16,7 +15,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from server.database import Base
@@ -52,7 +51,9 @@ class TelemetryEvent(Base):
     event_type = Column(String(64), nullable=False, index=True)
     severity = Column(String(16), default="info", nullable=False)
     data = Column(JSONB, nullable=False, default={})
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    timestamp = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
     processed = Column(Boolean, default=False, nullable=False)
 
     agent = relationship("Agent", back_populates="telemetry_events")
@@ -70,7 +71,9 @@ class Threat(Base):
     mitre_technique = Column(String(16), nullable=True)
     risk_score = Column(Float, default=0.0, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     agent = relationship("Agent", back_populates="threats")
 
@@ -85,7 +88,9 @@ class Incident(Base):
     status = Column(String(32), default="open", nullable=False)
     affected_agents = Column(JSONB, default=[], nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class Playbook(Base):

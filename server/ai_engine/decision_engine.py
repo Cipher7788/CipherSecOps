@@ -3,7 +3,7 @@
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -171,8 +171,9 @@ class AIDecisionEngine:
         top_events = sorted(event_type_counts.items(), key=lambda x: x[1], reverse=True)[:3]
         event_summary = ", ".join(f"{k}({v})" for k, v in top_events)
         agents_str = f"{len(agent_ids)} agent(s)"
+        total_events = sum(severity_counts.values())
         return (
-            f"Risk level is {risk_level} (score={risk_score}/100) based on {sum(severity_counts.values())} "
+            f"Risk level is {risk_level} (score={risk_score}/100) based on {total_events} "
             f"event(s) across {agents_str}. Severity distribution: [{sev_summary}]. "
             f"Top event types: [{event_summary}]."
         )
