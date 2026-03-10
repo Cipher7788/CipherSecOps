@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ciphersecops
+  labels:
+    app.kubernetes.io/name: ciphersecops
+    app.kubernetes.io/managed-by: kubectl

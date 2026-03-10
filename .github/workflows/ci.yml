@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Lint (flake8 + mypy) ────────────────────────────────────────────────────
+  lint-server:
+    name: Lint – server & agent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint dependencies
+        run: |
+          pip install --upgrade pip
+          pip install flake8 mypy
+          # Install package deps so mypy can resolve imports
+          pip install -r server/requirements.txt
+          pip install -r agent/requirements.txt
+
+      - name: flake8 – server
+        run: flake8 server/ --max-line-length=100 --exclude=__pycache__
+
+      - name: flake8 – agent
+        run: flake8 agent/ --max-line-length=100 --exclude=__pycache__
+
+      - name: mypy – server
+        run: mypy server/ --ignore-missing-imports --no-strict-optional
+
+      - name: mypy – agent
+        run: mypy agent/ --ignore-missing-imports --no-strict-optional
+
+  # ── Server tests (pytest + PostgreSQL + Redis) ──────────────────────────────
+  test-server:
+    name: Test – server
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: ciphersecops_test
+          POSTGRES_USER: ciphersecops
+          POSTGRES_PASSWORD: ciphersecops
+        options: >-
+          --health-cmd "pg_isready -U ciphersecops -d ciphersecops_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ciphersecops:ciphersecops@localhost:5432/ciphersecops_test
+      REDIS_URL: redis://localhost:6379/0
+      LOG_LEVEL: DEBUG
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r server/requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run server tests
+        run: pytest tests/ --ignore=tests/test_agent -v --cov=server --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: coverage.xml
+
+  # ── Agent tests ─────────────────────────────────────────────────────────────
+  test-agent:
+    name: Test – agent
+    runs-on: ubuntu-latest
+    env:
+      LOG_LEVEL: DEBUG
+      SERVER_URL: http://localhost:8000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r agent/requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+
+      - name: Run agent tests
+        run: pytest tests/test_agent/ -v --cov=agent --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-coverage
+          path: coverage.xml
+
+  # ── Dashboard build ─────────────────────────────────────────────────────────
+  build-dashboard:
+    name: Build – dashboard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies
+        working-directory: dashboard
+        run: npm ci
+
+      - name: Build
+        working-directory: dashboard
+        env:
+          REACT_APP_API_URL: http://localhost:8000
+          CI: "false"  # treat warnings as warnings, not errors
+        run: npm run build
+
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-build
+          path: dashboard/build/

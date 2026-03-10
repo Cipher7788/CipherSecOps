@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ciphersecops-config
+  namespace: ciphersecops
+  labels:
+    app.kubernetes.io/name: ciphersecops
+    app.kubernetes.io/part-of: ciphersecops
+data:
+  DATABASE_URL: "postgresql+asyncpg://ciphersecops:$(POSTGRES_PASSWORD)@postgres:5432/ciphersecops"
+  REDIS_URL: "redis://redis:6379/0"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  LOG_LEVEL: "INFO"
