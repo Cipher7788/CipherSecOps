@@ -1,0 +1,32 @@
+name: Reverse Shell Response
+trigger: reverse_shell
+description: >
+  Automated response playbook for reverse shell detection.
+  Isolates the endpoint, alerts the SOC, and initiates forensic collection.
+
+steps:
+  - name: alert_soc_on_detection
+    action: alert_soc
+    params:
+      message: "CRITICAL: Reverse shell detected on agent {{ agent_id }}"
+      severity: "{{ severity }}"
+
+  - name: collect_forensic_evidence
+    action: collect_forensics
+    params:
+      agent_id: "{{ agent_id }}"
+
+  - name: isolate_compromised_endpoint
+    condition: "risk_score >= 70"
+    action: isolate_endpoint
+    params:
+      agent_id: "{{ agent_id }}"
+
+  - name: create_incident_for_reverse_shell
+    action: create_incident_ticket
+    params:
+      title: "Reverse Shell Detected - {{ agent_id }}"
+      description: >
+        A reverse shell was detected on agent {{ agent_id }}.
+        Risk score: {{ risk_score }}. Automated isolation has been applied if score >= 70.
+      severity: critical
