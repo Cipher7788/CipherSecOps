@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Monitor runner
 # ---------------------------------------------------------------------------
 
+
 class _MonitorThread(threading.Thread):
     """Generic wrapper that runs a collect() callable on a fixed interval."""
 

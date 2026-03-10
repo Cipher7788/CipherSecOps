@@ -3,7 +3,6 @@ Telemetry sender — batches security events and ships them to the CipherSecOps
 backend over HTTPS with JWT auth and exponential-backoff retry logic.
 """
 
-import dataclasses
 import json
 import logging
 import queue
@@ -26,6 +25,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # JSON serialisation helper
 # ---------------------------------------------------------------------------
+
 
 class _AgentEncoder(json.JSONEncoder):
     """Serialise dataclasses, datetimes, and sets that the default encoder misses."""

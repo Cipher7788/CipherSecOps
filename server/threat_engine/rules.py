@@ -50,7 +50,9 @@ def _suspicious_process_spawn(event: Dict[str, Any]) -> bool:
     parent = str(_get(event, "data", "parent_process", default="")).lower()
     child = str(_get(event, "data", "process_name", default="")).lower()
     suspicious_parents = {"word.exe", "excel.exe", "outlook.exe", "powerpnt.exe", "winword.exe"}
-    suspicious_children = {"cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe"}
+    suspicious_children = {
+        "cmd.exe", "powershell.exe", "wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe",
+    }
     return parent in suspicious_parents and child in suspicious_children
 
 

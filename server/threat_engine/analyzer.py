@@ -60,7 +60,7 @@ class ThreatAnalyzer:
         for rule in matched_rules:
             risk_score = self._scorer.score(event_dict, [rule])
             risk_level = RiskScorer.get_risk_level(risk_score)
-            technique_info = get_technique(rule.mitre_technique or "")
+            _ = get_technique(rule.mitre_technique or "")
 
             detection = ThreatDetection(
                 rule_id=rule.id,
@@ -102,7 +102,10 @@ class ThreatAnalyzer:
         )
         db.add(threat)
         await db.flush()
-        logger.debug("Threat persisted: rule=%s agent=%s score=%d", detection.rule_id, detection.agent_id, detection.risk_score)
+        logger.debug(
+            "Threat persisted: rule=%s agent=%s score=%d",
+            detection.rule_id, detection.agent_id, detection.risk_score,
+        )
 
     async def _trigger_playbook(self, detection: ThreatDetection) -> None:
         """Trigger an automated playbook response if a template is available."""
@@ -125,6 +128,8 @@ class ThreatAnalyzer:
                     "rule_id": detection.rule_id,
                 }
                 await engine.execute(template_name, context)
-                logger.info("Playbook '%s' triggered for agent=%s", template_name, detection.agent_id)
+                logger.info(
+                    "Playbook '%s' triggered for agent=%s", template_name, detection.agent_id
+                )
         except Exception as exc:
             logger.error("Playbook trigger failed: %s", exc, exc_info=True)

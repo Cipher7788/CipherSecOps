@@ -4,9 +4,8 @@ suspicious behaviour using heuristic rules.
 """
 
 import logging
-import os
 import platform
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 
 try:
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ProcessInfo:
@@ -48,7 +48,9 @@ _NON_SHELL_PARENTS = {
 }
 
 # Shell-like binaries that are unexpected from _NON_SHELL_PARENTS
-_SHELL_NAMES = {"bash", "sh", "zsh", "fish", "dash", "ksh", "tcsh", "cmd.exe", "powershell.exe", "pwsh.exe"}
+_SHELL_NAMES = {
+    "bash", "sh", "zsh", "fish", "dash", "ksh", "tcsh", "cmd.exe", "powershell.exe", "pwsh.exe",
+}
 
 # Patterns that appear in download-and-execute one-liners
 _DOWNLOAD_EXEC_PATTERNS = [
@@ -87,7 +89,9 @@ def _check_suspicious(proc_info: ProcessInfo) -> tuple[bool, str]:
 
     # Rule 1: unexpected shell spawned from non-shell parents
     if name_lower in _SHELL_NAMES and parent in _NON_SHELL_PARENTS:
-        return True, f"Shell '{proc_info.name}' spawned from unexpected parent '{proc_info.parent_name}'"
+        return True, (
+            f"Shell '{proc_info.name}' spawned from unexpected parent '{proc_info.parent_name}'"
+        )
 
     # Rule 2: suspicious spawn pairs
     for (par_pattern, child_pattern) in _SUSPICIOUS_SPAWN_PAIRS:
