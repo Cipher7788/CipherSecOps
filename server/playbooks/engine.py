@@ -2,6 +2,8 @@
 
 import logging
 import os
+import re
+import shlex
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -83,18 +85,27 @@ class PlaybookEngine:
     def _evaluate_condition(self, condition: str, context: Dict[str, Any]) -> bool:
         """
         Evaluate a simple condition expression against the playbook context.
-        Supported syntax: 'key operator value', e.g. 'risk_score >= 60' or 'severity == critical'.
+        Supported syntax: 'key operator value', e.g. 'risk_score >= 60' or 'severity == "critical"'.
+        This implementation uses shlex to support quoted values and is conservative: invalid
+        or unsupported conditions return False (don't execute the step).
         """
         try:
-            parts = condition.split()
-            if len(parts) != 3:
+            # Use shlex to allow quoted values and preserve spacing inside quotes
+            parts = shlex.split(condition)
+            if len(parts) < 3:
                 logger.warning("Invalid condition format: %r", condition)
-                return True  # Default to executing the step
-            key, operator, expected = parts
+                return False
+            key = parts[0]
+            operator = parts[1]
+            expected = " ".join(parts[2:])
+
             actual = context.get(key)
             if actual is None:
+                # Missing context key -> condition not met
+                logger.debug("Condition key '%s' missing from context", key)
                 return False
-            # Try numeric comparison
+
+            # Try numeric comparison if both sides parse as numbers
             try:
                 actual_num = float(actual)
                 expected_num = float(expected)
@@ -110,30 +121,72 @@ class PlaybookEngine:
                     return actual_num == expected_num
                 if operator == "!=":
                     return actual_num != expected_num
-            except ValueError:
-                pass
-            # String comparison
-            if operator == "==":
-                return str(actual) == expected
-            if operator == "!=":
-                return str(actual) != expected
-            logger.warning("Unsupported operator '%s' in condition '%s'", operator, condition)
-            return True
+                logger.warning("Unsupported numeric operator '%s' in condition '%s'", operator, condition)
+                return False
+            except (ValueError, TypeError):
+                # Fall back to string comparison
+                actual_str = str(actual)
+                # Remove surrounding quotes from expected if present
+                if (expected.startswith('"') and expected.endswith('"')) or (
+                    expected.startswith("'") and expected.endswith("'")
+                ):
+                    expected_str = expected[1:-1]
+                else:
+                    expected_str = expected
+
+                if operator == "==":
+                    return actual_str == expected_str
+                if operator == "!=":
+                    return actual_str != expected_str
+                if operator.lower() == "in":
+                    return expected_str in actual_str
+                if operator.lower() == "notin" or operator.lower() == "not_in":
+                    return expected_str not in actual_str
+
+                logger.warning("Unsupported operator '%s' in condition '%s'", operator, condition)
+                return False
         except Exception as exc:
-            logger.error("Condition evaluation error: %s", exc)
-            return True
+            logger.error("Condition evaluation error: %s", exc, exc_info=True)
+            return False
 
     def _resolve_params(self, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
-        """Replace '{{key}}' placeholders in param values with context values."""
+        """Replace '{{key}}' placeholders in param values with context values.
+
+        Supports:
+        - Entire-value placeholders where the resolved value may be a non-string (int/dict/list)
+        - Embedded placeholders inside strings and multiple placeholders per value
+        """
         resolved: Dict[str, Any] = {}
+        placeholder_re = re.compile(r"\{\{\s*([^}]+)\s*\}\}")
+
         for k, v in params.items():
-            if isinstance(v, str) and v.startswith("{{") and v.endswith("}}"):
-                ctx_key = v[2:-2].strip()
-                if ctx_key not in context:
-                    logger.warning(
-                        "Playbook param '%s' references missing context key '%s'", k, ctx_key
-                    )
-                resolved[k] = context.get(ctx_key, v)
+            if isinstance(v, str):
+                # Exact-match placeholder -> return original type if present in context
+                m = placeholder_re.fullmatch(v)
+                if m:
+                    ctx_key = m.group(1).strip()
+                    if ctx_key not in context:
+                        logger.warning("Playbook param '%s' references missing context key '%s'", k, ctx_key)
+                        resolved[k] = v
+                    else:
+                        resolved[k] = context.get(ctx_key)
+                    continue
+
+                # Embedded or multiple placeholders -> replace with stringified context values
+                def _repl(match: re.Match) -> str:
+                    ctx_key = match.group(1).strip()
+                    if ctx_key not in context:
+                        logger.warning(
+                            "Playbook param '%s' references missing context key '%s'", k, ctx_key
+                        )
+                        return match.group(0)
+                    val = context.get(ctx_key)
+                    # Prefer simple string representation for embedding
+                    return str(val)
+
+                replaced = placeholder_re.sub(_repl, v)
+                resolved[k] = replaced
             else:
+                # Non-string params are left as-is
                 resolved[k] = v
         return resolved
