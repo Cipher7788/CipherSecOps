@@ -105,5 +105,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             # Echo back acknowledgement
             await manager.send_to_client(client_id, {"ack": True, "received": data})
     except WebSocketDisconnect:
-        manager.disconnect(client_id)
+        try:
+            await manager.disconnect(client_id)
+        except Exception:
+            logger.exception("Error during websocket disconnect for client %s", client_id)
         logger.info("WebSocket client %s disconnected", client_id)
